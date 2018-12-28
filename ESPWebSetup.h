@@ -23,11 +23,7 @@ class ESPWebSetup
   enum ESP32_mode { MODE_AP, MODE_CLIENT } currentMode;
 
   // Preferences = NVM storage
-  static Preferences ESP32_NVMSettings;
-  const char *ESP32_namespace = "ESP32ap";
-  const char *ESP32_ssid_setting = "ssis";
-  const char *ESP32_pass_setting = "pass";
-  const char *ESP32_mode_setting = "mode";
+  Preferences ESP32_NVMSettings;
 
   // AP mode ssid and password
   String AP_ssid;
@@ -38,11 +34,11 @@ class ESPWebSetup
   String CL_pass;
 
   // web server
-  static ESP32WebServer *webServer;
+  ESP32WebServer *webServer;
 
-  static void handleAPRoot();
-  static void handleAPOnSubmit();
-  static void handleNotFound();
+  void handleAPRoot();
+  void handleAPOnSubmit();
+  void handleNotFound();
 
   // run in client mode
   void runCL();
@@ -51,7 +47,7 @@ class ESPWebSetup
 
   // homepage for AP, to be defined correctly later
   // simple web page with forms
-  static constexpr char *AP_WEB_PAGE_HTML = 
+  const char *AP_WEB_PAGE_HTML = 
   "<!DOCTYPE html>\n"
   "<html>\n"
   "<body>\n"

@@ -6,10 +6,16 @@
 #include "Arduino.h"
 #include "ESPWebSetup.h"
 
+// Local defines
+#define ESP32_NAMESPACE       "ESP32ap"
+#define ESP32_SSID_SETTING    "ssid"
+#define ESP32_PASS_SETTING    "pass"
+#define ESP32_MODE_SETTING    "mode"
+
 ESPWebSetup::ESPWebSetup(char* ssid, char* pass)
 {
   // create web server listening to port 80
-  webServer = new ESP32WebServer(80);
+  ESPWebSetup::webServer = new ESP32WebServer(80);
   AP_ssid = ssid;
   AP_pass = pass;
   currentMode = MODE_AP;
@@ -18,10 +24,10 @@ ESPWebSetup::ESPWebSetup(char* ssid, char* pass)
 int ESPWebSetup::begin()
 {
   // read preferences, and initialize variables
-  ESP32_NVMSettings.begin(ESP32_namespace, false);
-  CL_ssid = ESP32_NVMSettings.getString(ESP32_ssid_setting,"");
-  CL_pass = ESP32_NVMSettings.getString(ESP32_pass_setting,"");
-  currentMode = (ESP32_mode)ESP32_NVMSettings.getUChar(ESP32_mode_setting,MODE_AP);
+  ESPWebSetup::ESP32_NVMSettings.begin(ESP32_NAMESPACE, false);
+  CL_ssid = ESPWebSetup::ESP32_NVMSettings.getString(ESP32_SSID_SETTING,"");
+  CL_pass = ESPWebSetup::ESP32_NVMSettings.getString(ESP32_PASS_SETTING,"");
+  currentMode = (ESP32_mode)ESPWebSetup::ESP32_NVMSettings.getUChar(ESP32_MODE_SETTING,MODE_AP);
 
   // which mode to run
   switch (currentMode)
@@ -55,7 +61,7 @@ void ESPWebSetup::runCL()
     if(nTimeOutCnt>120)
     {
       // can not connect, store AP mode and restart
-      ESP32_NVMSettings.putUChar(ESP32_mode_setting,MODE_AP);
+      ESPWebSetup::ESP32_NVMSettings.putUChar(ESP32_MODE_SETTING,MODE_AP);
       ESP.restart();
     }
   }
@@ -68,10 +74,10 @@ void ESPWebSetup::runAP()
   WiFi.softAP(AP_ssid.c_str(), AP_pass.c_str());
   IPAddress AP_IP = WiFi.softAPIP();
 
-  // register web server callback functions
-  webServer->on("/",handleAPRoot);
-  webServer->onNotFound(handleNotFound);
-  webServer->on("/submit",HTTP_POST,handleAPOnSubmit);
+  // register web server callback functions (using std:bind, to avoid static "mess")
+  webServer->on("/",std::bind(&ESPWebSetup::handleAPRoot,this));
+  webServer->onNotFound(std::bind(&ESPWebSetup::handleNotFound,this));
+  webServer->on("/submit",HTTP_POST,std::bind(&ESPWebSetup::handleAPOnSubmit,this));
 
   // start web server
   webServer->begin();
@@ -92,9 +98,9 @@ void ESPWebSetup::handleAPRoot()
 void ESPWebSetup::handleAPOnSubmit()
 {
   webServer->send(200, "text/plain", "Form submited! Restarting...");
-  ESP32_NVMSettings.putString(ESP32_ssid_setting,webServer->arg("ssid"));
-  ESP32_NVMSettings.putString(ESP32_pass_setting,webServer->arg("pass"));
-  ESP32_NVMSettings.putUChar(ESP32_mode_setting,MODE_CLIENT);
+  ESPWebSetup::ESP32_NVMSettings.putString(ESP32_SSID_SETTING,webServer->arg("ssid"));
+  ESPWebSetup::ESP32_NVMSettings.putString(ESP32_PASS_SETTING,webServer->arg("pass"));
+  ESPWebSetup::ESP32_NVMSettings.putUChar(ESP32_MODE_SETTING,MODE_CLIENT);
   ESP.restart();
 }
 
