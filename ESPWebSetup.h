@@ -10,19 +10,31 @@
 #include <WiFi.h>
 #include <ESP32WebServer.h>
 
+// Working modes 
+enum ESP32_mode_t { MODE_AP, MODE_CLIENT };
+
 class ESPWebSetup
 {
   public:
+
+    // Main functionality
     ESPWebSetup(char* ssid, char* pass);
-    int begin();
-    int update();
+    ESP32_mode_t begin();
+    void update();
+
+    // support functions
+    ESP32_mode_t getCurrentMode();
+    IPAddress getIPAddress();
+    
   
   private:
+  ESP32_mode_t currentMode;
   
-  // Working modes 
-  enum ESP32_mode { MODE_AP, MODE_CLIENT } currentMode;
-
   // Preferences = NVM storage
+  const char *ESP32_NAMESPACE =     "ESP32ap";
+  const char *ESP32_SSID_SETTING =  "ssis";
+  const char *ESP32_PASS_SETTING =  "pass";
+  const char *ESP32_MODE_SETTING =  "mode";
   Preferences ESP32_NVMSettings;
 
   // AP mode ssid and password
@@ -35,6 +47,9 @@ class ESPWebSetup
 
   // web server
   ESP32WebServer *webServer;
+
+  // IP address of web server
+  IPAddress _IP_Address;
 
   void handleAPRoot();
   void handleAPOnSubmit();
